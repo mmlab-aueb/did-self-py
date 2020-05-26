@@ -1,2 +1,4 @@
-# did-self-py
-A python implementation of did:self
+# A python implementation of did:self
+
+## Prerequisites
+
