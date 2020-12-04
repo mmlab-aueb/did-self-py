@@ -16,7 +16,6 @@ def prepare_self_did_proof_payload(did_document):
 def validate_proof_chain(did, did_document, proof_chain):
     _did = did
     _controller = did
-    print(_controller)
     for proof in proof_chain:
         claimed_proof = jws.JWS()
         claimed_proof.deserialize(proof)
@@ -31,9 +30,8 @@ def validate_proof_chain(did, did_document, proof_chain):
         signer_jwk = jwk.JWK(**signer_key_dict)
         claimed_proof.verify(signer_jwk)
         _controller = payload['controller']
-        print(_controller)
     if (_controller != did_document['controller']):
         raise Exception("The document includes an invalid controller")
         return -1
-    #ADD check sha-256
+    #TODO check sha-256
     return True

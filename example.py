@@ -85,6 +85,10 @@ document, proof_chain = registry.read()
 print(json.dumps(document, indent=2))
 print(json.dumps(proof_chain, indent=2))
 # Verify proof chain
-validate_proof_chain(did, document, proof_chain)
+try:
+    validate_proof_chain(did, document, proof_chain)
+    print("The proof chain is valid")
+except:
+    print("The proof chain is not valid")
 
 
