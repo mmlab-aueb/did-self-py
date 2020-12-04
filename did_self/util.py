@@ -22,8 +22,8 @@ def validate_proof_chain(did, did_document, proof_chain):
         payload = json.loads(claimed_proof.objects['payload'].decode())
         _id = payload['id']
         if (_id != _did):
-                raise Exception("The proof contains an invalid id")
-                return -1
+            raise Exception("The proof contains an invalid id")
+            return -1
         signer = _controller
         signer_key_64 = signer.split(":")[2]
         signer_key_dict = {'kty': 'OKP', 'crv': 'Ed25519', 'x': signer_key_64}
