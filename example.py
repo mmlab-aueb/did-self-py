@@ -82,7 +82,9 @@ registry.update(json.dumps(did_document), proof_64c)
 
 # Invoke the read method
 document, proof_chain = registry.read()
+print("DID document:")
 print(json.dumps(document, indent=2))
+print("Proof chain:")
 print(json.dumps(proof_chain, indent=2))
 # Verify proof chain
 try:
