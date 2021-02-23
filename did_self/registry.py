@@ -79,7 +79,7 @@ class DIDSelfRegistry:
             return -1 
         if (payload['id'] != document_dict['id'] or  payload['controller'] != controller):
             raise Exception("Not valid proof")
-            return -1  
+            return -1
         claimed_proof.verify(signer_jwk)
         return True
 

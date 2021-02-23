@@ -3,11 +3,15 @@ from did_self.util import prepare_self_did_proof_payload, validate_proof_chain
 from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
 import json
+import time
 
 registry = registry.DIDSelfRegistry()
 # Invoke the create method
 # Generate DID and initial secret key
+start_time = time.time()
 key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+stop_time = time.time()
+print (f'{stop_time - start_time} \t key generated')
 key_dict = key.export(private_key=False, as_dict=True)
 # Generate the DID document
 did = "did:self:" + key_dict['x'] 
@@ -27,9 +31,13 @@ did_document = {
     
 }
 jws_payload = prepare_self_did_proof_payload(did_document)
+start_time = time.time()
 proof = jws.JWS(jws_payload.encode('utf-8'))
 proof.add_signature(key, None, json_encode({"alg": "EdDSA"}),None)
 proof_64c = proof.serialize(compact=True)
+stop_time = time.time()
+print (f'{stop_time - start_time} \t JWS generated')
+print (len(proof_64c), "\t Length of proof")
 registry.create(json.dumps(did_document), proof_64c)
 
 # Update the DID document

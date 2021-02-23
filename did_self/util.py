@@ -3,6 +3,7 @@ from jwcrypto.common import json_encode, base64url_encode
 import json
 from jwcrypto import jwk, jws
 
+
 def prepare_self_did_proof_payload(did_document):
     documet_sha256 = hashlib.sha256()
     documet_sha256.update(json.dumps(did_document).encode('utf-8'))
