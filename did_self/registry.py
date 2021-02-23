@@ -47,14 +47,9 @@ class DIDSelfRegistry:
         if ("controller" not in document_dict or "id" not in document_dict):
             raise Exception("The DID document does not contain id or controller")
             return -1
-        if (not self._did_document): #checks for crete()
-            if (document_dict['controller'] != document_dict['id']):
-                raise Exception("The DID document does not contain a valid controller")
-                return -1
-        else: #check for update
-            if (document_dict['id'] != self._did):
-                raise Exception("The DID document does not contain a valid id")
-                return -1
+        if (self._did and document_dict['id'] != self._did):
+            raise Exception("The DID document does not contain a valid id")
+            return -1
 
         # check if proof contains controller
         claimed_proof = jws.JWS()
@@ -62,11 +57,12 @@ class DIDSelfRegistry:
         payload = json.loads(claimed_proof.objects['payload'].decode())
         controller = document_dict['controller']
         if (not self._did_document ): # invoked by the create method
-            signer = controller
+            signer = document_dict['id']
+            signer_key_64 = signer.split(":")[2]
         else:
             signer = self._did_document['controller']
+            signer_key_64 = signer.split(":")[2][1:]
         try:
-            signer_key_64 = signer.split(":")[2]
             signer_key_dict = {'kty': 'OKP', 'crv': 'Ed25519', 'x': signer_key_64}
             signer_jwk = jwk.JWK(**signer_key_dict)
         except:
@@ -76,7 +72,8 @@ class DIDSelfRegistry:
         # verify jws
         if ("id" not in payload or  "controller" not in payload):
             raise Exception("Not valid proof")
-            return -1 
+            return -1
+             
         if (payload['id'] != document_dict['id'] or  payload['controller'] != controller):
             raise Exception("Not valid proof")
             return -1

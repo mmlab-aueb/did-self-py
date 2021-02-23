@@ -10,13 +10,14 @@ def prepare_self_did_proof_payload(did_document):
     jws_payload = {
         'id': did_document['id'],
         'controller': did_document['controller'],
+        'version':1,
         'sha-256': base64url_encode(documet_sha256.digest())
     }
     return json.dumps(jws_payload)
 
 def validate_proof_chain(did, did_document, proof_chain):
     _did = did
-    _controller = did
+    _controller = "did:key:u" + did.split(":")[2]
     for proof in proof_chain:
         claimed_proof = jws.JWS()
         claimed_proof.deserialize(proof)
@@ -26,7 +27,7 @@ def validate_proof_chain(did, did_document, proof_chain):
             raise Exception("The proof contains an invalid id")
             return -1
         signer = _controller
-        signer_key_64 = signer.split(":")[2]
+        signer_key_64 = signer.split(":")[2][1:]
         signer_key_dict = {'kty': 'OKP', 'crv': 'Ed25519', 'x': signer_key_64}
         signer_jwk = jwk.JWK(**signer_key_dict)
         claimed_proof.verify(signer_jwk)
