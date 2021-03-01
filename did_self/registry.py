@@ -1,5 +1,8 @@
 from jwcrypto import jwk, jws
+from jwcrypto.common import json_encode, base64url_encode
+from did_self.proof_chain import  verify_proof_chain, verify_proof
 import json
+import hashlib
 
 class DIDSelfRegistry:
 
@@ -9,75 +12,44 @@ class DIDSelfRegistry:
         self._proof_chain = list()
         self._last_signer = ""
 
-    def create(self, did_document, proof):
-        document_dict = json.loads(did_document)      
+    def create(self, did_document:list, proof:jws.JWS):
+        proof_chain = [proof.serialize(compact=True)]
+        self.load(did_document, proof_chain)
+    
+    def load(self, did_document:list, proof_chain:list):      
+        if ("controller" not in did_document or "id" not in did_document):
+            raise Exception("The DID document does not contain id or controller")
         try:
-            self._verify_proof(did_document, proof)             
+            verify_proof_chain(did_document['id'], did_document, proof_chain)             
         except:
             raise Exception("Invalid proof")
             return -1
-        self._did = document_dict['id']
-        self._did_document = document_dict
-        self._proof_chain.append(proof)
-        self._last_signer =  self._did
+        self._did_document = did_document
+        self._proof_chain = proof_chain
+        self._last_signer =  did_document['id']
+        self._did = did_document['id']
+
 
     def update(self, did_document, proof):
-        document_dict = json.loads(did_document)
+        if ("controller" not in did_document or "id" not in did_document):
+            raise Exception("The DID document does not contain id or controller")
+        if (did_document["id"] != self._did):
+             raise Exception("The DID document does not contain a valid id")
         try:
-            self._verify_proof(did_document, proof)             
+            signer = self._did_document['controller'].split(":")[2][1:]
+            verify_proof(did_document, proof, signer)             
         except:
             raise Exception("Invalid proof")
             return -1
-        if (self._last_signer == self._did_document['controller']): 
-            self._proof_chain[-1] = proof
+        if (self._last_signer == signer): 
+            self._proof_chain[-1] = proof.serialize(compact=True)
         else:
-            self._proof_chain.append(proof)
-        self._last_signer =  self._did_document['controller']
-        self._did_document = document_dict
+            self._proof_chain.append(proof.serialize(compact=True))
+        self._last_signer =  signer
+        self._did_document = did_document
 
     def read(self):
         return self._did_document, self._proof_chain
         
-    def _verify_proof (self, did_document, proof):
-        try:
-            document_dict = json.loads(did_document)
-        except:
-            raise Exception("Not a valid DID document")
-            return -1
-        if ("controller" not in document_dict or "id" not in document_dict):
-            raise Exception("The DID document does not contain id or controller")
-            return -1
-        if (self._did and document_dict['id'] != self._did):
-            raise Exception("The DID document does not contain a valid id")
-            return -1
-
-        # check if proof contains controller
-        claimed_proof = jws.JWS()
-        claimed_proof.deserialize(proof)
-        payload = json.loads(claimed_proof.objects['payload'].decode())
-        controller = document_dict['controller']
-        if (not self._did_document ): # invoked by the create method
-            signer = document_dict['id']
-            signer_key_64 = signer.split(":")[2]
-        else:
-            signer = self._did_document['controller']
-            signer_key_64 = signer.split(":")[2][1:]
-        try:
-            signer_key_dict = {'kty': 'OKP', 'crv': 'Ed25519', 'x': signer_key_64}
-            signer_jwk = jwk.JWK(**signer_key_dict)
-        except:
-            raise Exception("Not valid DID document controller")
-            return -1
-        # check if the controller is the current controller of the did_document
-        # verify jws
-        if ("id" not in payload or  "controller" not in payload):
-            raise Exception("Not valid proof")
-            return -1
-             
-        if (payload['id'] != document_dict['id'] or  payload['controller'] != controller):
-            raise Exception("Not valid proof")
-            return -1
-        claimed_proof.verify(signer_jwk)
-        return True
 
 
