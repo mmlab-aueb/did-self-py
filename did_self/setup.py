@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="did-self-py",
-    version="0.2",
+    version="0.3",
     author="Nikos Fotiou",
     author_email="fotiou@aueb.gr",
     description="A did:self implementation",

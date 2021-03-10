@@ -1,8 +1,4 @@
-from jwcrypto import jwk, jws
-from jwcrypto.common import json_encode, base64url_encode
 from did_self.proof_chain import  verify_proof_chain, verify_proof
-import json
-import hashlib
 
 class DIDSelfRegistry:
 
@@ -12,7 +8,7 @@ class DIDSelfRegistry:
         self._proof_chain = list()
         self._last_signer = ""
 
-    def create(self, did_document:list, proof:jws.JWS):
+    def create(self, did_document:list, proof:'jws.JWS'):
         proof_chain = [proof.serialize(compact=True)]
         self.load(did_document, proof_chain)
     
@@ -36,7 +32,7 @@ class DIDSelfRegistry:
         if (did_document["id"] != self._did):
              raise Exception("The DID document does not contain a valid id")
         try:
-            signer = self._did_document['controller'].split(":")[2][1:]
+            signer = self._did_document['controller']
             verify_proof(did_document, proof, signer)             
         except:
             raise Exception("Invalid proof")

@@ -1,36 +1,32 @@
 from did_self import registry
 from did_self.proof_chain import generate_proof, verify_proof_chain
 from jwcrypto import jwk, jws
-from jwcrypto.common import json_encode
+from jwcrypto.common import base64url_decode
 import json
+import base58
 
 registry = registry.DIDSelfRegistry()
 # DID creation
 # Generate DID and initial secret key
-key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
-key_dict = key.export(private_key=False, as_dict=True)
+did_key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+did_key_dict = did_key.export_public(as_dict=True)
 # Generate the key for the first controller.
-key_v0 = jwk.JWK.generate(kty='OKP', crv='Ed25519')
-key_v0_dict = key_v0.export(private_key=False, as_dict=True)
+controller_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 # Generate the DID document
-did = "did:self:" + key_dict['x'] 
-controller = "did:key:u" + key_v0_dict['x']
+did = "did:self:" + did_key_dict['x']
+controller_key = controller_jwk.export(as_dict=True)['x']
+controller = "did:key:z6MK" + base58.b58encode(base64url_decode(controller_key)).decode()
 did_document = {
     'id': did,
     'controller': controller,
     'authentication': [{
         'id': did + '#key1',
         'type': "JsonWebKey2020",
-        'publicKeyJwk': {
-            'crv': 'Ed25519',
-            'x'  : key_dict['x'],
-            'kty': 'OKP',
-        }
-    }],
-    
+        'publicKeyJwk': did_key_dict
+    }],  
 }
 
-proof = generate_proof(did_document, key)
+proof = generate_proof(did_document, did_key)
 registry.create(did_document, proof)
 #-------------Dumping-------------------
 document, proof_chain = registry.read()
@@ -45,24 +41,20 @@ print("Proof payload:")
 print(json.dumps(payload, indent=2))
 
 # Update the DID document, change the controller
-key_v1 = jwk.JWK.generate(kty='OKP', crv='Ed25519')
-key_v1_dict = key_v1.export(private_key=False, as_dict=True)
+controller2_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
+controller_key = controller2_jwk.export(as_dict=True)['x']
+controller = "did:key:z6MK" + base58.b58encode(base64url_decode(controller_key)).decode()
 did_document = {
     'id': did,
-    'controller': "did:key:u" + key_v1_dict['x'],
+    'controller': controller,
     'authentication': [{
         'id': did + '#key1',
         'type': "JsonWebKey2020",
-        'publicKeyJwk': {
-            'crv': 'Ed25519',
-            'x'  : key_dict['x'],
-            'kty': 'OKP',
-        }
-    }]
+        'publicKeyJwk': did_key_dict
+    }],  
 }
-
 # Note the proof MUST be singed with the key of the previous controller
-proof = generate_proof(did_document, key_v0)
+proof = generate_proof(did_document, controller_jwk)
 registry.update(did_document, proof)
 #-------------Dumping-------------------
 document, proof_chain = registry.read()
@@ -77,23 +69,18 @@ print("Proof payload:")
 print(json.dumps(payload, indent=2))
 
 # Update again the DID document, change the authentication key
-key_v2 = jwk.JWK.generate(kty='OKP', crv='Ed25519')
-key_v2_dict = key_v1.export(private_key=False, as_dict=True)
+authnetication_key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 did_document = {
     'id': did,
-    'controller': "did:key:u" + key_v1_dict['x'],
+    'controller': controller,
     'authentication': [{
         'id': did + '#key2',
         'type': "JsonWebKey2020",
-        'publicKeyJwk': {
-            'crv': 'Ed25519',
-            'x'  : key_v2_dict['x'],
-            'kty': 'OKP',
-        }
+        'publicKeyJwk': authnetication_key.export_public(as_dict=True)
     }]
 }
 # Note the proof MUST be singed with the key of the previous controller
-proof = generate_proof(did_document, key_v1)
+proof = generate_proof(did_document, controller2_jwk)
 registry.update(did_document, proof)
 #-------------Dumping-------------------
 document, proof_chain = registry.read()
