@@ -1,9 +1,8 @@
-from did_self import registry
-from did_self.proof_chain import generate_proof, verify_proof_chain
+from didself import registry
+from didself.proof_chain import generate_proof, verify_proof_chain
+from didself.did_util import Ed25519_to_didkey
 from jwcrypto import jwk, jws
-from jwcrypto.common import base64url_decode
 import json
-import base58
 
 registry = registry.DIDSelfRegistry()
 # DID creation
@@ -15,7 +14,7 @@ controller_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 # Generate the DID document
 did = "did:self:" + did_key_dict['x']
 controller_key = controller_jwk.export(as_dict=True)['x']
-controller = "did:key:z6MK" + base58.b58encode(base64url_decode(controller_key)).decode()
+controller = Ed25519_to_didkey(controller_key)
 did_document = {
     'id': did,
     'controller': controller,
@@ -43,7 +42,7 @@ print(json.dumps(payload, indent=2))
 # Update the DID document, change the controller
 controller2_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 controller_key = controller2_jwk.export(as_dict=True)['x']
-controller = "did:key:z6MK" + base58.b58encode(base64url_decode(controller_key)).decode()
+controller = Ed25519_to_didkey(controller_key)
 did_document = {
     'id': did,
     'controller': controller,

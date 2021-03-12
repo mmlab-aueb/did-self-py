@@ -3,7 +3,7 @@ import json
 import datetime
 from jwcrypto.common import base64url_encode
 from jwcrypto import jwk, jws
-from did_self.did_util import did_to_jwk
+from didself.did_util import did_to_jwk
 
 def generate_proof(did_document:list, json_web_key:jwk.JWK, created:str=None):
     documet_sha256 = hashlib.sha256()

@@ -1,4 +1,4 @@
-from did_self.proof_chain import  verify_proof_chain, verify_proof
+from didself.proof_chain import  verify_proof_chain, verify_proof
 
 class DIDSelfRegistry:
 

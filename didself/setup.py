@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="did-self-py",
-    version="0.3",
+    name="didself",
+    version="0.5",
     author="Nikos Fotiou",
     author_email="fotiou@aueb.gr",
     description="A did:self implementation",
