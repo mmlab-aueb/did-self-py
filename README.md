@@ -2,8 +2,10 @@
 This is a python implementation of the [did:self method](https://github.com/mmlab-aueb/did-self)
 
 ## Installing from sources
-Python3 and jwcrypto library are required. jwcrypto can be installed using
-`pip3 install jwcrypto`
+You can install from sources by invoking form the didself directory
+` python3 -m pip install -e .`
+
+This will install `jwcrypto` and `base58` packages. 
 
 ## Usage
 You can find example code in `example.py`

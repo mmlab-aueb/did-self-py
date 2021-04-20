@@ -1,14 +1,17 @@
-import setuptools
+from setuptools import setup, find_packages
+import pathlib
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+here = pathlib.Path(__file__).parent.resolve()
 
-setuptools.setup(
+long_description = (here / 'README.md').read_text(encoding='utf-8')
+
+setup(
     name="didself",
-    version="0.5",
+    version="1.0",
     author="Nikos Fotiou",
     author_email="fotiou@aueb.gr",
     description="A did:self implementation",
+    license='MIT',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mmlab-aueb/did-self-py",
@@ -17,6 +20,8 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=setuptools.find_packages(),
-    python_requires=">=3.6",
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
+    python_requires=">=3.6, <4",
+    install_requires=['base58','jwcrypto']
 )
