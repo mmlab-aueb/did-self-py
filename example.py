@@ -6,9 +6,10 @@ import json
 # Generate DID and initial secret key
 did_key = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 # Initialize registry
-registry = registry.DIDSelfRegistry(did_key)
-did_key_dict = did_key.export_public(as_dict=True)
+owner_registry = registry.DIDSelfRegistry(did_key)
+
 # Generate the DID document
+did_key_dict = did_key.export_public(as_dict=True)
 did = "did:self:" + did_key_dict['x']
 did_document = {
     'id': did,
@@ -19,19 +20,19 @@ did_document = {
     }],  
 }
 
-registry.create(did_document)
+owner_registry.create(did_document)
 #-------------Dumping-------------------
-document, proof_chain = registry.read()
+document, proofs = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
-print("Proof chain:")
-print(json.dumps(proof_chain, indent=2))
-proof = jws.JWS()
-proof.deserialize(proof_chain[-1])
-payload = json.loads(proof.objects['payload'].decode())
-print("Proof payload:")
+document_proof = jws.JWS()
+document_proof.deserialize(proofs[0])
+payload = json.loads(document_proof.objects['payload'].decode())
+print("Document proof payload:")
 print(json.dumps(payload, indent=2))
-
+print("Document proof signature:")
+print(document_proof.objects['signature'].hex())
+print("----------------------------------")
 # Change the authentication key
 authentication_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 did_document = {
@@ -43,46 +44,37 @@ did_document = {
     }]
 }
 
-registry.update(did_document)
+owner_registry.update(did_document)
 #-------------Dumping-------------------
-document, proof_chain = registry.read()
+document, proofs = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
-print("Proof chain:")
-print(json.dumps(proof_chain, indent=2))
-proof = jws.JWS()
-proof.deserialize(proof_chain[-1])
-payload = json.loads(proof.objects['payload'].decode())
-print("Proof payload:")
+document_proof = jws.JWS()
+document_proof.deserialize(proofs[0])
+payload = json.loads(document_proof.objects['payload'].decode())
+print("Document proof payload:")
 print(json.dumps(payload, indent=2))
+print("Document proof signature:")
+print(document_proof.objects['signature'].hex())
+print("----------------------------------")
 
-#Create a DID document with a controller
+# Delegate to a controller
 controller_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
-did_document = {
-    'id': did,
-    'authentication': [{
-        'id': did + '#key3',
-        'type': "JsonWebKey2020",
-        'publicKeyJwk': did_key_dict
-    }],  
-}
-
-registry.create(did_document, controller_jwk=controller_jwk)
+controller_public_key = controller_jwk.export_public(as_dict=True)
+delegation = owner_registry.delegate(controller_public_key)
 #-------------Dumping-------------------
-document, proof_chain = registry.read()
-print("DID document:")
-print(json.dumps(document, indent=2))
-print("Proof chain:")
-print(json.dumps(proof_chain, indent=2))
-proof = jws.JWS()
-proof.deserialize(proof_chain[-1])
-payload = json.loads(proof.objects['payload'].decode())
-print("Proof payload:")
+delegation_proof = jws.JWS()
+delegation_proof.deserialize(delegation)
+payload = json.loads(delegation_proof.objects['payload'].decode())
+print("Delegation proof payload:")
 print(json.dumps(payload, indent=2))
+print("Delegation proof signature:")
+print(delegation_proof.objects['signature'].hex())
+print("----------------------------------")
 
 # Change the authentication key
-# first configure the registry to use the contoller key
-registry.set_key(controller_jwk)
+# first configure controller registry
+controller_registry = registry.DIDSelfRegistry(controller_jwk, delegation)
 authentication_jwk = jwk.JWK.generate(kty='OKP', crv='Ed25519')
 did_document = {
     'id': did,
@@ -93,15 +85,17 @@ did_document = {
     }]
 }
 
-registry.update(did_document)
+controller_registry.update(did_document)
 #-------------Dumping-------------------
-document, proof_chain = registry.read()
+document, proofs = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
-print("Proof chain:")
-print(json.dumps(proof_chain, indent=2))
-proof = jws.JWS()
-proof.deserialize(proof_chain[-1])
-payload = json.loads(proof.objects['payload'].decode())
-print("Proof payload:")
+document_proof = jws.JWS()
+document_proof.deserialize(proofs[0])
+payload = json.loads(document_proof.objects['payload'].decode())
+print("Document proof payload:")
 print(json.dumps(payload, indent=2))
+print("Document proof signature:")
+print(document_proof.objects['signature'].hex())
+print("----------------------------------")
+print (owner_registry.verify(document, proofs))

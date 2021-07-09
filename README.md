@@ -3,7 +3,7 @@ This is a python implementation of the [did:self method](https://github.com/mmla
 
 ## Installing from sources
 You can install from sources by invoking form the didself directory
-` python3 -m pip install -e .`
+`python3 -m pip install -e .`
 
 This will install `jwcrypto` and `base58` packages. 
 

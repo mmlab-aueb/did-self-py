@@ -5,7 +5,7 @@ from jwcrypto.common import base64url_encode
 from jwcrypto import jwk, jws
 from didself.did_util import did_to_jwk
 
-def generate_proof(did_document:list, did_key:jwk.JWK, controller_jwk:jwk.JWK=None, created:str=None):
+def generate_document_proof(did_document:list, did_key:jwk.JWK, created:str=None):
     document_sha256 = hashlib.sha256()
     document_sha256.update(json.dumps(did_document).encode('utf-8'))
     if (not created):
@@ -15,8 +15,19 @@ def generate_proof(did_document:list, did_key:jwk.JWK, controller_jwk:jwk.JWK=No
         'created':created,
         'sha-256': base64url_encode(document_sha256.digest())
     }
-    if (controller_jwk):
-        jws_payload_dict['controller']= controller_jwk.export_public(as_dict=True)
+    jws_payload = json.dumps(jws_payload_dict)
+    proof = jws.JWS(jws_payload.encode('utf-8'))
+    proof.add_signature(did_key, None, json.dumps({"alg": "EdDSA"}),None)
+    return proof
+
+def generate_delegation_proof(did_document:list, did_key:jwk.JWK, controller_jwk:jwk.JWK, created:str=None):
+    if (not created):
+        created = datetime.datetime.utcnow().replace(microsecond=0).isoformat()+'Z'
+    jws_payload_dict = {
+        'id': did_document['id'],
+        'created':created,
+        'controller': controller_jwk
+    }
     jws_payload = json.dumps(jws_payload_dict)
     proof = jws.JWS(jws_payload.encode('utf-8'))
     proof.add_signature(did_key, None, json.dumps({"alg": "EdDSA"}),None)
@@ -34,13 +45,19 @@ def verify_proof(did_document:list, proof:jws.JWS, signer:str):
     proof.verify(signer_jwk)
 
 def get_controller(proof_chain):
-    last_proof = jws.JWS()
-    last_proof.deserialize(proof_chain[-1])
-    payload = json.loads(last_proof.objects['payload'].decode())
+    delegation_proof = jws.JWS()
+    delegation_proof.deserialize(proof_chain[0])
+    payload = json.loads(delegation_proof.objects['payload'].decode())
     if ('controller' in payload):
         return jwk.JWK(**payload['controller'])
     else:
         return None
+
+def get_id(proof):
+    delegation_proof = jws.JWS()
+    delegation_proof.deserialize(proof)
+    payload = json.loads(delegation_proof.objects['payload'].decode())
+    return payload['id']
 
 def verify_proof_chain(did, did_document, proof_chain):
     #--------------Verify sha-256 in the last proof----------
