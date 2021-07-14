@@ -22,11 +22,11 @@ did_document = {
 
 owner_registry.create(did_document)
 #-------------Dumping-------------------
-document, proofs = owner_registry.read()
+document, proof, delegation = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
 document_proof = jws.JWS()
-document_proof.deserialize(proofs[0])
+document_proof.deserialize(proof)
 payload = json.loads(document_proof.objects['payload'].decode())
 print("Document proof payload:")
 print(json.dumps(payload, indent=2))
@@ -46,11 +46,11 @@ did_document = {
 
 owner_registry.update(did_document)
 #-------------Dumping-------------------
-document, proofs = owner_registry.read()
+document, proof, delegation = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
 document_proof = jws.JWS()
-document_proof.deserialize(proofs[0])
+document_proof.deserialize(proof)
 payload = json.loads(document_proof.objects['payload'].decode())
 print("Document proof payload:")
 print(json.dumps(payload, indent=2))
@@ -87,15 +87,15 @@ did_document = {
 
 controller_registry.update(did_document)
 #-------------Dumping-------------------
-document, proofs = owner_registry.read()
+document, proof, delegation = owner_registry.read()
 print("DID document:")
 print(json.dumps(document, indent=2))
 document_proof = jws.JWS()
-document_proof.deserialize(proofs[0])
+document_proof.deserialize(proof)
 payload = json.loads(document_proof.objects['payload'].decode())
 print("Document proof payload:")
 print(json.dumps(payload, indent=2))
 print("Document proof signature:")
 print(document_proof.objects['signature'].hex())
 print("----------------------------------")
-print (owner_registry.verify(document, proofs))
+print (registry.verify(document, proof, delegation))
