@@ -7,7 +7,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name="didself",
-    version="1.0",
+    version="2.0",
     author="Nikos Fotiou",
     author_email="fotiou@aueb.gr",
     description="A did:self implementation",
