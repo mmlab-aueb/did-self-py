@@ -3,7 +3,7 @@ This is a python implementation of the [did:self method](https://github.com/mmla
 
 # Usage
 This library can be used for Creating, Reading, Updating, or Delegating a 
-did:self DID. This operations are supported by an auxiliary script called the
+did:self DID. These operations are supported by an auxiliary script called the
 `self registry`.
 
 ## Self registry preparation
