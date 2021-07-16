@@ -11,5 +11,5 @@ This will install `jwcrypto` and `base58` packages.
 You can find example code in `example.py`
 
 ## Documentation
-Refer to the [Package documentation](did_self/README.md)
+Refer to the [Package documentation](didself/README.md)
 
