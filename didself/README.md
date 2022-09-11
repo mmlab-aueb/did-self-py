@@ -56,4 +56,3 @@ did_document = {
 }
 owner_registry.update(did_document)
 ```
-`
